@@ -49,9 +49,17 @@ uv run ruff check .              # Lint
 - **MCP 服务器**: Mock 连接和工具发现
 - **通道 SDK**: Mock 各平台 SDK 的消息收发
 
+## E2E Tests
+
+### Academic Memory Injection E2E Tests
+- **File:** `tests/e2e/test_academic_memory_e2e.py`
+- **Coverage:** Scenario 1 (unconfigured → no regression), Scenario 2 (missing file → FileNotFoundError with path), Scenario 3 (writing-agent gets `<academic_memory>`), Scenario 4 (code-agent does NOT get `<academic_memory>`)
+- **Run:** `uv run pytest tests/e2e/test_academic_memory_e2e.py -v`
+
 ## 覆盖范围
 
 - 核心模块（Agent 构建、配置、后端）覆盖率较高
 - 各通道均有独立 smoke test
 - 中间件有详细的单元测试
 - CLI 命令有集成测试
+- Academic memory injection 有 E2E 集成测试（`tests/e2e/`）

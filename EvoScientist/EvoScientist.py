@@ -131,6 +131,38 @@ def _load_mcp_tools_cached() -> dict[str, list]:
 # =============================================================================
 
 
+def _collect_academic_memory_files() -> list[str]:
+    """Collect all academic_memory filenames declared across all subagents.
+
+    Reads ``SUBAGENTS_CONFIG`` (subagent.yaml) and gathers the union of all
+    ``academic_memory`` lists.  Duplicates are removed while preserving order.
+
+    Returns:
+        Deduplicated list of filenames (e.g. ``["TASTE.md", "WRITER.md",
+        "METHODOLOGY.md"]``), or an empty list if no subagent declares
+        ``academic_memory``.
+    """
+    import yaml
+
+    try:
+        with SUBAGENTS_CONFIG.open(encoding="utf-8") as fh:
+            config = yaml.safe_load(fh) or {}
+    except Exception:
+        return []
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for spec in config.values():
+        if not isinstance(spec, dict):
+            continue
+        files = spec.get("academic_memory") or []
+        for fname in files:
+            if fname not in seen:
+                seen.add(fname)
+                result.append(fname)
+    return result
+
+
 def _inject_subagent_middleware(subs: list[dict]) -> None:
     """Ensure every subagent gets error handling and context management middleware.
 
@@ -297,12 +329,21 @@ def _get_default_middleware():
     cfg = _ensure_config()
     model = _ensure_chat_model()
     memory_dir = str(_paths_mod.MEMORIES_DIR)
+    academic_memory_dir = cfg.academic_memory_dir or None
+    academic_memory_category = cfg.academic_memory_category or None
+    academic_memory_files = _collect_academic_memory_files() if academic_memory_dir else None
     mw = [
         create_context_editing_middleware(model),
         ContextOverflowMapperMiddleware(),
         ToolErrorHandlerMiddleware(),
         *create_tool_selector_middleware(),
-        create_memory_middleware(memory_dir, extraction_model=model),
+        create_memory_middleware(
+            memory_dir,
+            extraction_model=model,
+            academic_memory_dir=academic_memory_dir,
+            academic_memory_category=academic_memory_category,
+            academic_memory_files=academic_memory_files,
+        ),
     ]
 
     if cfg.enable_ask_user and not cfg.auto_mode:
@@ -425,12 +466,21 @@ def create_cli_agent(workspace_dir: str | None = None, checkpointer=None, config
     )
 
     model = _ensure_chat_model()
+    _academic_memory_dir = cfg.academic_memory_dir or None
+    _academic_memory_category = cfg.academic_memory_category or None
+    _academic_memory_files = _collect_academic_memory_files() if _academic_memory_dir else None
     mw: list[AgentMiddleware] = [
         create_context_editing_middleware(model),
         ContextOverflowMapperMiddleware(),
         ToolErrorHandlerMiddleware(),
         *create_tool_selector_middleware(),
-        create_memory_middleware(_mem_dir, extraction_model=model),
+        create_memory_middleware(
+            _mem_dir,
+            extraction_model=model,
+            academic_memory_dir=_academic_memory_dir,
+            academic_memory_category=_academic_memory_category,
+            academic_memory_files=_academic_memory_files,
+        ),
     ]
     if cfg.enable_ask_user and not cfg.auto_mode:
         from .middleware.ask_user import AskUserMiddleware

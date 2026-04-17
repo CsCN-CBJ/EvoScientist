@@ -217,6 +217,10 @@ class EvoScientistConfig:
     stt_device: str = "cpu"  # "cpu" | "cuda"
     stt_compute_type: str = "int8"  # "int8" | "float16" | "float32"
 
+    # Academic Memory (ROME integration) Settings
+    academic_memory_dir: str = ""  # root dir of ROME academic memory files; empty = disabled
+    academic_memory_category: str = ""  # sub-directory category (e.g. research domain)
+
 
 # =============================================================================
 # Config file operations
