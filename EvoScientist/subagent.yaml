@@ -2,6 +2,8 @@ planner-agent:
   description: "Plan experiments: stages, success signals, and dependencies (no web search, no implementation)."
   tools: [think_tool]
   skills: ["/skills/"]
+  academic_memory:
+    - METHODOLOGY.md
   system_prompt: |
     You are the planner-agent. You do NOT implement code. You create and update experimental plans
     that are practical to run locally.
@@ -138,6 +140,9 @@ writing-agent:
   description: "Draft a paper-ready Markdown experiment report (no fabricated results/citations)."
   tools: [think_tool]
   skills: ["/skills/"]
+  academic_memory:
+    - TASTE.md
+    - WRITER.md
   system_prompt: |
     You are the writing-agent. Draft a clear Markdown experimental report suitable for later paper writing.
 

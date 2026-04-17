@@ -31,6 +31,7 @@ import logging
 import re
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, NotRequired, cast
 
 from langchain.agents.middleware.types import (
@@ -225,6 +226,17 @@ DEFAULT_MEMORY_TEMPLATE = """# EvoScientist Memory
 ## Learned Preferences
 - (none yet)
 """
+
+
+ACADEMIC_MEMORY_TEMPLATE = """<academic_memory>
+{content}
+</academic_memory>
+
+<academic_memory_instructions>
+The above <academic_memory> contains academic knowledge learned from the ROME system,
+including writing style preferences, evaluation taste, and research methodology.
+Apply this knowledge when writing reports, planning experiments, or evaluating results.
+</academic_memory_instructions>"""
 
 
 def _get_thread_id(runtime: Runtime) -> str:
@@ -464,12 +476,18 @@ class EvoMemoryMiddleware(AgentMiddleware):
         memory_path: str = "/memories/MEMORY.md",
         extraction_model: BaseChatModel | None = None,
         trigger: tuple[str, int] = ("messages", 20),
+        academic_memory_dir: str | None = None,
+        academic_memory_category: str | None = None,
+        academic_memory_files: list[str] | None = None,
     ) -> None:
         self._backend = backend
         self._memory_path = memory_path
         self._extraction_model = extraction_model
         self._trigger = trigger
         self._last_extraction_at: dict[str, int] = {}  # message count per thread
+        self._academic_memory_dir = academic_memory_dir
+        self._academic_memory_category = academic_memory_category
+        self._academic_memory_files = academic_memory_files
 
     # -- backend resolution --------------------------------------------------
 
@@ -576,6 +594,58 @@ class EvoMemoryMiddleware(AgentMiddleware):
                 logger.warning("Failed to write memory: %s", result.error)
         except Exception as e:
             logger.warning("Exception writing memory: %s", e)
+
+    # -- academic memory -----------------------------------------------------
+
+    def _read_academic_memory(self) -> str:
+        """Read and concatenate academic memory files from the configured directory.
+
+        Returns:
+            Concatenated content of all configured academic memory files, or ``""``
+            if ``academic_memory_dir`` is not configured.
+
+        Raises:
+            ValueError: If any filename contains ``/`` or ``..`` (path traversal).
+            FileNotFoundError: If a configured file does not exist on disk.
+        """
+        if not self._academic_memory_dir:
+            return ""
+        if not self._academic_memory_files:
+            return ""
+
+        # Validate all filenames before reading any
+        for filename in self._academic_memory_files:
+            if "/" in filename or ".." in filename:
+                raise ValueError(
+                    f"Invalid academic memory filename: {filename!r}. "
+                    "Filenames must not contain '/' or '..'."
+                )
+
+        base_dir = Path(self._academic_memory_dir)
+        if self._academic_memory_category:
+            base_dir = base_dir / self._academic_memory_category
+
+        parts: list[str] = []
+        for filename in self._academic_memory_files:
+            file_path = base_dir / filename
+            if not file_path.exists():
+                raise FileNotFoundError(
+                    f"Academic memory file not found: {file_path}. "
+                    "Run ROME learning phase and copy the output to this path."
+                )
+            try:
+                content = file_path.read_text(encoding="utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValueError(
+                    f"Academic memory file is not valid UTF-8: {file_path}"
+                ) from exc
+            parts.append(content.rstrip("\n"))
+
+        if not parts:
+            return ""
+
+        separator = "\n\n---\n\n"
+        return separator.join(parts)
 
     # -- threshold check -----------------------------------------------------
 
@@ -693,6 +763,13 @@ class EvoMemoryMiddleware(AgentMiddleware):
 
         injection = MEMORY_INJECTION_TEMPLATE.format(memory_content=memory_content)
         new_system = append_to_system_message(request.system_message, injection)
+
+        # Append academic memory if configured
+        academic_content = self._read_academic_memory()
+        if academic_content:
+            academic_injection = ACADEMIC_MEMORY_TEMPLATE.format(content=academic_content)
+            new_system = append_to_system_message(new_system, academic_injection)
+
         return request.override(system_message=new_system)
 
     def wrap_model_call(
@@ -784,6 +861,9 @@ def create_memory_middleware(
     memory_dir: str | None = None,
     extraction_model: BaseChatModel | None = None,
     trigger: tuple[str, int] = ("messages", 20),
+    academic_memory_dir: str | None = None,
+    academic_memory_category: str | None = None,
+    academic_memory_files: list[str] | None = None,
 ) -> EvoMemoryMiddleware:
     """Create an EvoMemoryMiddleware for long-term memory.
 
@@ -796,6 +876,13 @@ def create_memory_middleware(
         extraction_model: Chat model for auto-extraction (optional; if None,
             only prompt-guided manual memory updates via edit_file will work).
         trigger: When to auto-extract. Default: every 20 human messages.
+        academic_memory_dir: Path to the ROME academic memory root directory.
+            If ``None``, academic memory injection is skipped.
+        academic_memory_category: Subdirectory under ``academic_memory_dir``
+            (e.g. the research category/domain). If ``None``, files are read
+            directly from ``academic_memory_dir``.
+        academic_memory_files: List of filenames to inject (e.g.
+            ``["TASTE.md", "WRITER.md"]``). Sourced from subagent.yaml.
 
     Returns:
         Configured EvoMemoryMiddleware instance.
@@ -816,4 +903,7 @@ def create_memory_middleware(
         memory_path="/MEMORY.md",
         extraction_model=extraction_model,
         trigger=trigger,
+        academic_memory_dir=academic_memory_dir,
+        academic_memory_category=academic_memory_category,
+        academic_memory_files=academic_memory_files,
     )
