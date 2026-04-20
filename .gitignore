@@ -37,6 +37,8 @@ workspace/
 skills/
 memory/
 media/
+temp/
+paper/
 conversation_history/
 .deno_cache/
 *.ipynb

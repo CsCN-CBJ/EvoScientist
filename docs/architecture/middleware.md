@@ -54,6 +54,11 @@ Agent 主动向用户提问以获取澄清。仅在 `enable_ask_user=True` 且�
 
 1. **注入**（每次 LLM 调用）：读取 `/memories/MEMORY.md` 追加到系统提示词
 2. **提取**（阈值触发）：对话超过一定消息数时，使用 LLM 提取结构化事实并合并到 MEMORY.md
+3. **Academic Memory 注入**：当 `academic_memory_dir` 配置时，读取 ROME 学习产出的学术记忆文件（TASTE.md、WRITER.md、METHODOLOGY.md 等），追加 `<academic_memory>` XML block 到系统提示词
+   - 文件路径：`{academic_memory_dir}/{academic_memory_category}/{filename}`
+   - 多文件以 `\n\n---\n\n` 分隔
+   - `academic_memory_dir` 未配置时完全跳过；文件缺失时抛 `FileNotFoundError`
+   - Reviewer TASTE 文件存放在 `academic_memory/system/reviewers/*/TASTE.md`，由 reviewer-agent 自行读取
 
 ## 模块间交互
 

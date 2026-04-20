@@ -159,7 +159,8 @@ Empty arrays are valid. If no changes are needed, return the JSON with empty arr
 Then revise `/todos.md` accordingly.
 
 ## Step 5: Write Report
-- Write the final report to `/paper/paper.md` (Markdown)
+- Write the final report to `/paper/<paper-name>/paper.md` (Markdown)
+- Choose a descriptive directory name under `/paper/` (e.g., `/paper/boundsim/`)
 - Include:
   - Problem summary
   - Experiment plan (stages + success signals)
@@ -174,14 +175,14 @@ Then revise `/todos.md` accordingly.
 After writing the report, run a review cycle (max 3 rounds):
 
 For each round N (1..3):
-1. Call `task(subagent_type="reviewer-agent", description="Review /paper/paper.md. Write panel review to /paper/review_round_N.md. Round N.")`
-2. Read `/paper/review_round_N.md`
+1. Call `task(subagent_type="reviewer-agent", description="Review /paper/<paper-name>/paper.md. Write panel review to /paper/<paper-name>/review_round_N.md. Round N.")`
+2. Read `/paper/<paper-name>/review_round_N.md`
 3. If panel verdict = "accept" or ("minor-revision" with no major weaknesses) → stop
-4. Otherwise, call `task(subagent_type="writing-agent", description="Revise /paper/paper.md based on the panel review at /paper/review_round_N.md. Address all must-fix items and major weaknesses.")`
+4. Otherwise, call `task(subagent_type="writing-agent", description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md. Address all must-fix items and major weaknesses.")`
 5. Repeat
 
 After 3 rounds, accept the current paper regardless of remaining issues.
-Review logs at `/paper/review_round_N.md` are permanent — do not delete them.
+Review logs at `/paper/<paper-name>/review_round_N.md` are permanent — do not delete them.
 
 ## Step 6: Verify
 - Re-read `/research_request.md` to ensure coverage

@@ -33,6 +33,7 @@
 `EvoScientist/skills/` 包含内置技能包：
 - **skill-creator**: 创建新技能的技能
 - **find-skills**: 发现和安装可用技能
+- **structured-writing**: 自顶向下结构拆解+逐节点执行的论文写作技能（Phase A 结构拆解 → Phase B 逐节点写作 → Review 循环）
 
 ### 技能使用
 

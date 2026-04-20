@@ -44,7 +44,7 @@ Phase B: Node Execution
 ## Phase A: Structure Decomposition
 
 <HARD-GATE>
-Do NOT write any paragraph content until the full structure tree is decomposed down to the paragraph level and saved to `/structure.md`. Writing content before the structure is complete is the most common failure mode.
+Do NOT write any paragraph content until the full structure tree is decomposed down to the paragraph level and saved to the paper directory. Writing content before the structure is complete is the most common failure mode.
 </HARD-GATE>
 
 ### Step A1: Gather Inputs
@@ -90,10 +90,10 @@ For each leaf section (a section/subsection with no children), determine:
 
 ### Step A5: Write Structure Document
 
-Save the complete structure tree to `/structure.md` following the format in `references/structure-spec.md`.
+Create a paper directory under `/paper/<paper-name>/` (e.g., `/paper/boundsim/`). Save the complete structure tree to `/paper/<paper-name>/structure.md` following the format in `references/structure-spec.md`.
 
 <HARD-GATE>
-After writing `/structure.md`, verify:
+After writing the structure document, verify:
 - Every leaf node has a `rhetorical_mode` declared
 - Every leaf node has at least one `key_point`
 - No node has a placeholder (TBD, TODO, etc.)
@@ -108,7 +108,7 @@ If any check fails, fix the structure before proceeding to Phase B.
 
 ### Step B1: Read Structure
 
-Read `/structure.md` and understand the complete tree.
+Read the structure document from the paper directory and understand the complete tree.
 
 ### Step B2: Depth-First Traversal
 
@@ -150,15 +150,15 @@ After self-review, the paper goes through an external review cycle with the revi
 1. **Invoke reviewer-agent:**
    ```
    task(subagent_type="reviewer-agent",
-        description="Review /paper/paper.md. Write panel review to /paper/review_round_N.md. Round N.")
+        description="Review /paper/<paper-name>/paper.md. Write panel review to /paper/<paper-name>/review_round_N.md. Round N.")
    ```
    The reviewer-agent will:
    - Discover TASTE files in `academic_memory/system/reviewers/*/TASTE.md`
    - Launch parallel sub-reviews for each persona
    - Merge into a panel verdict
-   - Write the result to `/paper/review_round_N.md`
+   - Write the result to `/paper/<paper-name>/review_round_N.md`
 
-2. **Read the review log** at `/paper/review_round_N.md`
+2. **Read the review log** at `/paper/<paper-name>/review_round_N.md`
 
 3. **Check termination conditions:**
    - Panel verdict = `accept` → stop, paper is ready
@@ -168,18 +168,18 @@ After self-review, the paper goes through an external review cycle with the revi
 4. **Invoke writing-agent to revise:**
    ```
    task(subagent_type="writing-agent",
-        description="Revise /paper/paper.md based on the panel review at /paper/review_round_N.md. Address all must-fix items and major weaknesses.")
+        description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md. Address all must-fix items and major weaknesses.")
    ```
 
 5. **Repeat** until termination condition is met or 3 rounds are exhausted
 
 **After 3 rounds:** Accept the current paper regardless of remaining issues.
 
-**Review logs are permanent** — do not delete `/paper/review_round_N.md` files.
+**Review logs are permanent** — do not delete review files under the paper directory.
 
 ### Step B6: Clean Up
 
-Delete `/structure.md` — it is a temporary working file. Keep all review logs under `/paper/`.
+Delete the structure document from the paper directory — it is a temporary working file. Keep all review logs.
 
 ---
 
@@ -202,7 +202,7 @@ See `references/writing-quality.md` for the complete checklist.
 
 | Gate | Location | Check |
 |------|----------|-------|
-| No writing before structure | Start of Phase B | `/structure.md` exists and is complete |
+| No writing before structure | Start of Phase B | Structure document exists in paper directory and is complete |
 | Leaf node completeness | End of Step A5 | Every leaf has `rhetorical_mode` + `key_points` |
 | No placeholders | End of Step A5 | No TBD/TODO in structure |
 | Per-paragraph quality | After each paragraph | Self-check list passed |

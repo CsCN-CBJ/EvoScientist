@@ -4,7 +4,7 @@ The structure tree is the central artifact of Phase A. It captures the complete 
 
 ## File Location
 
-Save the structure tree to `/structure.md` in the workspace root. This file is temporary — delete it after Phase B completes.
+Save the structure tree to `/paper/<paper-name>/structure.md` in the paper's work directory. This file is temporary — delete it after Phase B completes.
 
 ## Format
 
