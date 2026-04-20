@@ -67,6 +67,8 @@ Based on the research content, decide:
 
 Write each chapter as a top-level node in the structure tree.
 
+**Abstract rule:** Academic papers MUST include an Abstract as the first chapter in the structure tree. The Abstract is planned in Phase A (as part of the structure), but written LAST in Phase B — after all other chapters are complete. This ensures the Abstract accurately summarizes the finished paper.
+
 ### Step A3: Decompose Each Chapter
 
 For each chapter, decide whether it needs subsections:
@@ -110,7 +112,7 @@ Read `/structure.md` and understand the complete tree.
 
 ### Step B2: Depth-First Traversal
 
-Traverse the structure tree in depth-first order. For each node:
+Traverse the structure tree in depth-first order, **skipping the Abstract chapter**. For each node:
 
 **Non-leaf node (chapter/section/subsection):**
 - Write the section heading
@@ -122,6 +124,8 @@ Traverse the structure tree in depth-first order. For each node:
 2. Read `references/rhetorical-modes.md` if you want guidance on the declared mode
 3. Write the paragraph following the declared mode and key points
 4. After writing, run the quality self-check (see below)
+
+**After all non-Abstract chapters are complete**, write the Abstract chapter. The Abstract should summarize the complete paper: problem, method, key results, and implications. This ensures the Abstract accurately reflects the finished content.
 
 ### Step B3: Assemble
 
@@ -137,9 +141,45 @@ Read the assembled paper end-to-end. Check:
 - [ ] No section is disproportionately short or long relative to its importance
 - [ ] The paper tells a coherent story, not just a collection of sections
 
-### Step B5: Clean Up
+### Step B5: Review Loop
 
-Delete `/structure.md` — it is a temporary working file.
+After self-review, the paper goes through an external review cycle with the reviewer-agent. Maximum 3 rounds.
+
+**For each round (1 to 3):**
+
+1. **Invoke reviewer-agent:**
+   ```
+   task(subagent_type="reviewer-agent",
+        description="Review /paper/paper.md. Write panel review to /paper/review_round_N.md. Round N.")
+   ```
+   The reviewer-agent will:
+   - Discover TASTE files in `academic_memory/system/reviewers/*/TASTE.md`
+   - Launch parallel sub-reviews for each persona
+   - Merge into a panel verdict
+   - Write the result to `/paper/review_round_N.md`
+
+2. **Read the review log** at `/paper/review_round_N.md`
+
+3. **Check termination conditions:**
+   - Panel verdict = `accept` → stop, paper is ready
+   - Panel verdict = `minor-revision` and no major weaknesses → stop, writer makes small fixes
+   - Otherwise → continue to revision
+
+4. **Invoke writing-agent to revise:**
+   ```
+   task(subagent_type="writing-agent",
+        description="Revise /paper/paper.md based on the panel review at /paper/review_round_N.md. Address all must-fix items and major weaknesses.")
+   ```
+
+5. **Repeat** until termination condition is met or 3 rounds are exhausted
+
+**After 3 rounds:** Accept the current paper regardless of remaining issues.
+
+**Review logs are permanent** — do not delete `/paper/review_round_N.md` files.
+
+### Step B6: Clean Up
+
+Delete `/structure.md` — it is a temporary working file. Keep all review logs under `/paper/`.
 
 ---
 

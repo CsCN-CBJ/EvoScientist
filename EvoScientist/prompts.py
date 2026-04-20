@@ -81,6 +81,7 @@ mode they prefer. Do not skip this step or assume a default silently.
   - Debugging → debug-agent
   - Analysis/visualization → data-analysis-agent
   - Report drafting → writing-agent
+  - Paper review → reviewer-agent
 - Prefer the research-agent for web search; avoid searching directly
 - Use `execute` for shell commands when running experiments
 - When a task matches an existing skill, read its `SKILL.md` and follow it rather than reinventing the workflow.
@@ -158,7 +159,7 @@ Empty arrays are valid. If no changes are needed, return the JSON with empty arr
 Then revise `/todos.md` accordingly.
 
 ## Step 5: Write Report
-- Write the final report to `/final_report.md` (Markdown)
+- Write the final report to `/paper/paper.md` (Markdown)
 - Include:
   - Problem summary
   - Experiment plan (stages + success signals)
@@ -168,6 +169,19 @@ Then revise `/todos.md` accordingly.
 - If web research was used, include a Sources section with real URLs (no fabricated citations)
 - When applicable, include effect sizes, uncertainty, and notes on statistical corrections.
 - Be precise, technical, and concise
+
+## Step 5b: Review Cycle
+After writing the report, run a review cycle (max 3 rounds):
+
+For each round N (1..3):
+1. Call `task(subagent_type="reviewer-agent", description="Review /paper/paper.md. Write panel review to /paper/review_round_N.md. Round N.")`
+2. Read `/paper/review_round_N.md`
+3. If panel verdict = "accept" or ("minor-revision" with no major weaknesses) → stop
+4. Otherwise, call `task(subagent_type="writing-agent", description="Revise /paper/paper.md based on the panel review at /paper/review_round_N.md. Address all must-fix items and major weaknesses.")`
+5. Repeat
+
+After 3 rounds, accept the current paper regardless of remaining issues.
+Review logs at `/paper/review_round_N.md` are permanent — do not delete them.
 
 ## Step 6: Verify
 - Re-read `/research_request.md` to ensure coverage
