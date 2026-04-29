@@ -148,17 +148,18 @@ After self-review, the paper goes through an external review cycle with the revi
 **For each round (1 to 3):**
 
 1. **Invoke reviewer-agent:**
+   > ⚠️ Review files **MUST** be named `review_round_N_reviewerX.md` (where N = round number, X = reviewer label A/B/C/…). The reviewer-agent also writes a merged panel verdict to `review_round_N.md`.
    ```
    task(subagent_type="reviewer-agent",
-        description="Review /paper/<paper-name>/paper.md. Write panel review to /paper/<paper-name>/review_round_N.md. Round N.")
+        description="Review /paper/<paper-name>/paper.md. Each reviewer writes to /paper/<paper-name>/review_round_N_reviewerX.md (X=A,B,C…). Merge all into a panel verdict at /paper/<paper-name>/review_round_N.md. Round N.")
    ```
    The reviewer-agent will:
    - Discover TASTE files in `academic_memory/system/reviewers/*/TASTE.md`
    - Launch parallel sub-reviews for each persona
-   - Merge into a panel verdict
-   - Write the result to `/paper/<paper-name>/review_round_N.md`
+   - Each reviewer writes to `/paper/<paper-name>/review_round_N_reviewerX.md`
+   - Merge into a panel verdict and write to `/paper/<paper-name>/review_round_N.md`
 
-2. **Read the review log** at `/paper/<paper-name>/review_round_N.md`
+2. **Read the panel review** at `/paper/<paper-name>/review_round_N.md`
 
 3. **Check termination conditions:**
    - Panel verdict = `accept` → stop, paper is ready
@@ -168,7 +169,7 @@ After self-review, the paper goes through an external review cycle with the revi
 4. **Invoke writing-agent to revise:**
    ```
    task(subagent_type="writing-agent",
-        description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md. Address all must-fix items and major weaknesses.")
+        description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md and individual reviews at /paper/<paper-name>/review_round_N_reviewerX.md. Address all must-fix items and major weaknesses.")
    ```
 
 5. **Repeat** until termination condition is met or 3 rounds are exhausted
@@ -179,7 +180,7 @@ After self-review, the paper goes through an external review cycle with the revi
 
 ### Step B6: Clean Up
 
-Delete the structure document from the paper directory — it is a temporary working file. Keep all review logs.
+Keep the structure document in the paper directory — it records the decomposition decisions and rhetorical mode assignments for future reference. Keep all review logs.
 
 ---
 

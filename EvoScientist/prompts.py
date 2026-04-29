@@ -175,14 +175,14 @@ Then revise `/todos.md` accordingly.
 After writing the report, run a review cycle (max 3 rounds):
 
 For each round N (1..3):
-1. Call `task(subagent_type="reviewer-agent", description="Review /paper/<paper-name>/paper.md. Write panel review to /paper/<paper-name>/review_round_N.md. Round N.")`
+1. Call `task(subagent_type="reviewer-agent", description="Review /paper/<paper-name>/paper.md. Each reviewer writes to /paper/<paper-name>/review_round_N_reviewerX.md (X=A,B,C…). Merge all into a panel verdict at /paper/<paper-name>/review_round_N.md. Round N.")`
 2. Read `/paper/<paper-name>/review_round_N.md`
 3. If panel verdict = "accept" or ("minor-revision" with no major weaknesses) → stop
-4. Otherwise, call `task(subagent_type="writing-agent", description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md. Address all must-fix items and major weaknesses.")`
+4. Otherwise, call `task(subagent_type="writing-agent", description="Revise /paper/<paper-name>/paper.md based on the panel review at /paper/<paper-name>/review_round_N.md and individual reviews at /paper/<paper-name>/review_round_N_reviewerX.md. Address all must-fix items and major weaknesses.")`
 5. Repeat
 
 After 3 rounds, accept the current paper regardless of remaining issues.
-Review logs at `/paper/<paper-name>/review_round_N.md` are permanent — do not delete them.
+Review logs at `/paper/<paper-name>/review_round_N_reviewerX.md` and `/paper/<paper-name>/review_round_N.md` are permanent — do not delete them.
 
 ## Step 6: Verify
 - Re-read `/research_request.md` to ensure coverage
